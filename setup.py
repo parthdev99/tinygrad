@@ -22,7 +22,7 @@ setup(name='tinygrad',
         "License :: OSI Approved :: MIT License"
       ],
       install_requires=[],
-      python_requires='>=3.10',
+      python_requires='>=3.8',
       extras_require={
         'llvm': ["llvmlite"],
         'arm': ["unicorn"],
