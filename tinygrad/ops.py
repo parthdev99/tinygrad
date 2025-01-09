@@ -360,12 +360,20 @@ class UOp(MathTrait, metaclass=UOpMetaClass):
 
   @staticmethod
   def new_buffer(device:str, size:int, dtype:DType, num=-1): return  UOp(Ops.BUFFER, dtype.ptr(), (), (num, (device, size, dtype)))
+  # @functools.cached_property
+  # def device(self) -> str:
+  #   match self.op:
+  #     case Ops.COPY: return self.arg
+  #     case Ops.BUFFER: return self.arg[1][0]
+  #     case _: return self.src[0].device
   @functools.cached_property
   def device(self) -> str:
-    match self.op:
-      case Ops.COPY: return self.arg
-      case Ops.BUFFER: return self.arg[1][0]
-      case _: return self.src[0].device
+    if self.op == Ops.COPY:
+      return self.arg
+    elif self.op == Ops.BUFFER:
+      return self.arg[1][0]
+    else:
+      return self.src[0].device
   @property
   def size(self) -> int: return self.buf_uop.arg[1][1]
   @property
