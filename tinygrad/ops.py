@@ -9,7 +9,8 @@ from tinygrad.dtype import ConstType, ImageDType, PtrDType, dtypes, DType, trunc
 from tinygrad.helpers import ContextVar, prod, getenv, all_same, Context, partition, temp, unwrap, T
 if TYPE_CHECKING:
   from tinygrad.shape.shapetracker import ShapeTracker
-
+from builtins import *
+from functools import reduce
 # wrapper around IntEnum that preserves Enum.__str__ and makes auto() unique across all FastEnum subclasses
 class FastEnum(IntEnum):
   def __str__(self): return Enum.__str__(self)
@@ -413,12 +414,14 @@ class UOp(MathTrait, metaclass=UOpMetaClass):
   # *** uop symbolic stuff ***
 
   def const_factor(self) -> int:
-    """largest known int that divides self"""
-    if self.op is Ops.CONST: return self.arg
-    if self.op is Ops.VCONST: return math.gcd(*self.arg)
+    """Return the largest known int that divides self."""
+    if self.op is Ops.CONST: return self.arg  # Directly return the constant value
+    if self.op is Ops.VCONST: return reduce(math.gcd, self.arg)  # GCD of multiple values
     if self.op is Ops.ADD: return math.gcd(self.src[0].const_factor(), self.src[1].const_factor())
-    if self.op is Ops.MUL: return self.src[0].arg if self.src[0].op is Ops.CONST else self.src[1].arg if self.src[1].op is Ops.CONST else 1
-    return 1
+    if self.op is Ops.MUL:
+        return (self.src[0].arg if self.src[0].op is Ops.CONST else self.src[1].arg if self.src[1].op is Ops.CONST else 1)
+    return 1  # Default case when no known operation matches
+
   def divides(self, v) -> Optional[UOp]:
     if v==1: return self
     if self.op is Ops.CONST: return self.const_like(self.arg//v) if self.arg%v == 0 else None
@@ -934,10 +937,19 @@ def div_folding(x:UOp, c:int) -> Optional[UOp]:
   if quo is None: return x.const_like(0) if rem is None else cast(UOp, div_folding(rem, div))//(c//div)
   return quo if rem is None else cast(UOp, div_folding(rem, div))//(c//div)+quo
 
-def lt_folding(x:UOp, c:int) -> Optional[UOp]:
+def lt_folding(x: UOp, c: int) -> Optional[UOp]:
+  # Partition the input operation into two groups based on a condition
   p, np = partition(split_uop(x, Ops.ADD), lambda u: u.const_factor() == 1)
-  if np and (d:=math.gcd(*[u.const_factor() for u in np], c)) > 1 and 0 <= sum(u.vmin for u in p) and sum(u.vmax for u in p) < d:
-    return cast(UOp, functools.reduce(operator.add, np).divides(d)).lt(c//d)
+    # Check if np is not empty and compute the GCD of the constant factors
+  if np:
+    # Extract constant factors
+    factors = [u.const_factor() for u in np]
+    # Calculate GCD of all factors and c
+    d = reduce(math.gcd, factors + [c])  # Include c in the GCD calculation
+    # Check conditions for folding
+    if d > 1 and 0 <= sum(u.vmin for u in p) and sum(u.vmax for u in p) < d:
+      # Return the result of folding if conditions are met
+      return cast(UOp, functools.reduce(operator.add, np).divides(d)).lt(c // d)  
   return None
 
 def fold_unrolled_divs(divs:UOp):
