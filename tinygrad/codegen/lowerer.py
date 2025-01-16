@@ -7,6 +7,7 @@ from tinygrad.dtype import dtypes, PtrDType
 from tinygrad.ops import KernelInfo, UOp, Ops, graph_rewrite, PatternMatcher, UPat, sint, identity_element, sint_to_uop
 from tinygrad.renderer import Renderer
 from tinygrad.helpers import all_int, prod, partition, flatten
+from builtins import *
 
 # returns the axes to create new_shape if new_shape can be created by combining axis from old_shape
 def get_contraction(old_shape:Tuple[sint, ...], new_shape:Tuple[sint, ...]) -> Optional[List[List[int]]]:
