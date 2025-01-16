@@ -10,7 +10,7 @@ from tinygrad.shape.shapetracker import ShapeTracker
 from tinygrad.shape.view import View, strides_for_shape
 from tinygrad.engine.lazy import LazyBuffer
 from tinygrad.device import Buffer
-
+from builtins import *
 # creation can recurse a lot
 sys.setrecursionlimit(10000)
 
