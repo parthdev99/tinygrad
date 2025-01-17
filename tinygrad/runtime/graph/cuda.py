@@ -51,7 +51,7 @@ class CUDAGraph(MultiGraphRunner):
       self.instance = init_c_var(cuda.CUgraphExec(), lambda x: check(cuda.cuGraphInstantiate_v2(ctypes.byref(x), self.graph, None, None, 0)))
     except (AttributeError, ctypes.ArgumentError):
       # Fall back to old API
-      self.instance = init_c_var(cuda.CUgraphExec(), lambda x: check(cuda.cuGraphInstantiate(ctypes.byref(x), self.graph, 0)))
+      self.instance = init_c_var(cuda.CUgraphExec(), lambda x: check(cuda.cuGraphInstantiate_v2(ctypes.byref(x), self.graph, 0)))
 
   
   def __call__(self, input_rawbuffers: List[Buffer], var_vals: Dict[Variable, int], wait=False) -> Optional[float]:
