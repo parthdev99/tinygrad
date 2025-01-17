@@ -4445,7 +4445,11 @@ try:
     cuGraphInstantiate_v2.restype = CUresult
     cuGraphInstantiate_v2.argtypes = [ctypes.POINTER(ctypes.POINTER(struct_CUgraphExec_st)), CUgraph, ctypes.POINTER(ctypes.POINTER(struct_CUgraphNode_st)), ctypes.POINTER(ctypes.c_char), size_t]
 except AttributeError:
-    pass
+    # If not available, fall back to cuGraphInstantiate
+    cuGraphInstantiate_v2 = _libraries['libcuda.so'].cuGraphInstantiate
+    cuGraphInstantiate_v2.restype = CUresult
+    cuGraphInstantiate_v2.argtypes = [ctypes.POINTER(ctypes.POINTER(struct_CUgraphExec_st)), CUgraph, ctypes.c_uint]
+
 try:
     cuGraphInstantiateWithFlags = _libraries['libcuda.so'].cuGraphInstantiateWithFlags
     cuGraphInstantiateWithFlags.restype = CUresult
